@@ -39,8 +39,8 @@ func compile(input: String, output: String, isFramework: Bool, frameworkIdentifi
                     showAlert(Title: "Unkown Error", Message: "Error creating directory: \(error.localizedDescription)")
                 }
             }
-            let Extension = String(URL(fileURLWithPath: input).pathExtension)
-            let task = Process()
+            let Extension: String = String(URL(fileURLWithPath: input).pathExtension)
+            let task: Process = Process()
             var isFileSupport: Bool = true
             switch Extension {
             case "m":
