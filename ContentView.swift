@@ -130,7 +130,7 @@ struct ContentView: View {
                             debugProcess.launch()
                             debugProcess.waitUntilExit()
                             // Launch and wait for exit
-                            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                            let data: Data = pipe.fileHandleForReading.readDataToEndOfFile()
                             debug = String(data: data, encoding: .utf8) ?? String()
                             // Read data from pipe and output it to TextView
                         } else {
