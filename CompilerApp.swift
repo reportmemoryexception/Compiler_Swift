@@ -73,12 +73,12 @@ func compile(input: String, output: String, isFramework: Bool, frameworkIdentifi
                 break
             }
             if isFileSupport {
-                let pipe = Pipe()
+                let pipe: Pipe = Pipe()
                 task.standardOutput = pipe
                 task.standardError = pipe
                 task.launch()
                 task.waitUntilExit()
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let data: Data = pipe.fileHandleForReading.readDataToEndOfFile()
                 Result = String(data: data, encoding: .utf8) ?? String()
             }
         } else {
