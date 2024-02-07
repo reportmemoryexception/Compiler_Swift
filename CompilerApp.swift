@@ -24,7 +24,7 @@ func checkError(string: String) -> Bool {
 }
 
 func compile(input: String, output: String, isFramework: Bool, frameworkIdentifier: String, isExternalArguments: Bool, externalArguments: [String]) -> String {
-    var Result = String()
+    var result = String()
     let fs = FileManager.default
     // get FileManager
     
@@ -68,7 +68,7 @@ func compile(input: String, output: String, isFramework: Bool, frameworkIdentifi
                 task.arguments = [input, "-o", output]
                 break
             default:
-                Result = "Error: Bad Document Type: \"\(Extension)\""
+                result = "Error: Bad Document Type: \"\(Extension)\""
                 isFileSupport = false
                 break
             }
@@ -79,15 +79,15 @@ func compile(input: String, output: String, isFramework: Bool, frameworkIdentifi
                 task.launch()
                 task.waitUntilExit()
                 let data: Data = pipe.fileHandleForReading.readDataToEndOfFile()
-                Result = String(data: data, encoding: .utf8) ?? String()
+                result = String(data: data, encoding: .utf8) ?? String()
             }
         } else {
-            Result = "Error: File Already Exists: \"\(output)\""
+            result = "Error: File Already Exists: \"\(output)\""
         }
     } else {
-        Result = "Error: No Such File: \"\(input)\""
+        result = "Error: No Such File: \"\(input)\""
     }
-    return Result
+    return result
 }
 
 @main
