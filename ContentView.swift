@@ -120,15 +120,15 @@ struct ContentView: View {
                     Button("Run & Debug") {
                         if compilerAction() {
                             // Compile Succeeded
-                            let process = Process()
-                            process.launchPath = output
+                            let debugProcess: Process = Process()
+                            debugProcess.launchPath = output
                             // Set launch path to compiled executable
                             let pipe = Pipe()
-                            process.standardOutput = pipe
-                            process.standardError = pipe
+                            debugProcess.standardOutput = pipe
+                            debugProcess.standardError = pipe
                             // Get Stdout and Stderr into pipe
-                            process.launch()
-                            process.waitUntilExit()
+                            debugProcess.launch()
+                            debugProcess.waitUntilExit()
                             // Launch and wait for exit
                             let data = pipe.fileHandleForReading.readDataToEndOfFile()
                             debug = String(data: data, encoding: .utf8) ?? String()
