@@ -8,7 +8,7 @@
 import SwiftUI
 
 func showAlert(Title: String, Message: String) {
-    let alert = NSAlert()
+    let alert: NSAlert = NSAlert()
     alert.messageText = Title
     alert.informativeText = Message
     alert.addButton(withTitle: "dismiss")
@@ -26,17 +26,14 @@ func checkError(string: String) -> Bool {
 func compile(input: String, output: String, isFramework: Bool, frameworkIdentifier: String, isExternalArguments: Bool, externalArguments: [String]) -> String {
     var result = String()
     let fs = FileManager.default
-    // get FileManager
-    
     if fs.fileExists(atPath: input) {
-        // Input file exists
         if !fs.fileExists(atPath: output) {
             let outputParent =  URL(fileURLWithPath: output).deletingLastPathComponent().path
             if !fs.fileExists(atPath: outputParent) {
                 do {
                     try FileManager.default.createDirectory(atPath: outputParent, withIntermediateDirectories: true, attributes: nil)
                 } catch {
-                    showAlert(Title: "Unkown Error", Message: "Error creating directory: \(error.localizedDescription)")
+                    showAlert(Title: "Unknown Error", Message: "Error creating directory: \(error.localizedDescription)")
                 }
             }
             let Extension: String = String(URL(fileURLWithPath: input).pathExtension)
@@ -79,7 +76,7 @@ func compile(input: String, output: String, isFramework: Bool, frameworkIdentifi
                 task.launch()
                 task.waitUntilExit()
                 let data: Data = pipe.fileHandleForReading.readDataToEndOfFile()
-                result = String(data: data, encoding: .utf8) ?? String()
+                result = String(data: data, encoding: .utf8) ?? "(null)"
             }
         } else {
             result = "Error: File Already Exists: \"\(output)\""
@@ -95,9 +92,7 @@ func compile(input: String, output: String, isFramework: Bool, frameworkIdentifi
 struct Compiler_Swfit_TestApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView().accentColor(Color.black).frame(minWidth: 450, idealWidth: 450, maxWidth: .infinity, minHeight: 400, idealHeight: 400, maxHeight: .infinity)
-                .toolbar {
-                }
+            ContentView().accentColor(Color(red: 0, green: 0, blue: 0)).frame(minWidth: 450, idealWidth: 450, maxWidth: .infinity, minHeight: 450, idealHeight: 450, maxHeight: .infinity)
         }
     }
 }
