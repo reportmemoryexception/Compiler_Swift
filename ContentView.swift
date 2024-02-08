@@ -23,52 +23,44 @@ struct ContentView: View {
         if !input.isEmpty && !output.isEmpty {
             if isFrameworkCompile {
                 if framework.contains(", ") {
-                    // Delimiter found
                     let frameworkArray: Array = framework.split(separator: ", ")
-                    // Split framework input by delimiter and store in array
                     var args: [String] = []
-                    // Create array to store processed components
                     for i: String.SubSequence in frameworkArray {
-                        args.append("-framework")
-                        args.append(String(i))
+                        while !i.isEmpty {
+                            args.append("-framework")
+                            args.append(String(i))
+                        }
                     }
-                    // Now the array contains argument without input and output
                     args.append(input)
                     args.append("-o")
                     args.append(output)
-                    // Add input and output to array
-                    // Array Becomes full argument
                     result = compile(input: input, output: output, isFramework: true, frameworkIdentifier: String(), isExternalArguments: true, externalArguments: args)
-                    // Run compiler with externalArgument: processed array
                 } else {
                     result = compile(input: input, output: output, isFramework: true, frameworkIdentifier: framework, isExternalArguments: false, externalArguments: [])
-                    // No delimiter
                 }
             } else {
                 result = compile(input: input, output: output, isFramework: false, frameworkIdentifier: String(), isExternalArguments: false, externalArguments: [])
-                // No framework
             }
             input = String()
             isFrameworkCompile = false
             framework = String()
-            if (checkError(string: result)) {
+            if checkError(string: result) {
                 alert = result
                 showAlert(Title: "Compiler Threw Error", Message: result)
                 result.removeAll()
-                return true
-                // Successfully compiled
+                return false
             } else {
                 compilerOutput = result
                 result.removeAll()
-                return false
-                // Failed compiling
+                return true
             }
         }
         return true
     }
     
     var body: some View {
-        let accentGray = Color(red:0.775, green: 0.775, blue: 0.775)
+        let accent = Color(red:0.775, green: 0.775, blue: 0.775)
+        let backgroundColor = (colorScheme == .dark) ? Color.black : Color.white
         VStack {
             VStack {
                 HStack {
@@ -78,7 +70,7 @@ struct ContentView: View {
                         .padding(.leading, 5)
                         .textFieldStyle(PlainTextFieldStyle())
                         .frame(height: 22)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(colorScheme == .dark ? Color.black : Color.white).stroke(accentGray))
+                        .background(RoundedRectangle(cornerRadius: 6).fill(backgroundColor).stroke(accent))
                 }
                 HStack {
                     Text("Output File: ")
@@ -87,7 +79,7 @@ struct ContentView: View {
                         .padding(.leading, 5)
                         .textFieldStyle(PlainTextFieldStyle())
                         .frame(height: 22)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(colorScheme == .dark ? Color.black : Color.white).stroke(accentGray))
+                        .background(RoundedRectangle(cornerRadius: 6).fill(backgroundColor).stroke(accent))
                         .padding(.leading, 11)
                 }
                 Divider()
@@ -100,46 +92,39 @@ struct ContentView: View {
                         .padding(.leading, 5)
                         .textFieldStyle(PlainTextFieldStyle())
                         .frame(height: 22)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(colorScheme == .dark ? Color.black : Color.white).stroke(isFrameworkCompile ? accentGray : colorScheme == .dark ? Color.black : Color.white))
+                        .background(RoundedRectangle(cornerRadius: 6).fill(backgroundColor).stroke(isFrameworkCompile ? accent : backgroundColor))
                         .disabled(!isFrameworkCompile)
                     Button("Compile") {
                         _ = compilerAction()
-                        // Run compiler action
                         output = String()
                     } .keyboardShortcut("b", modifiers: .command)
-                    // Command + B
+                    // Command + B -> Build executable from source code file
                 }
                 Divider()
                 HStack {
                     Text("Compiler: ")
                     Text(compilerOutput)
                     Text(alert)
-                        .foregroundStyle(Color.red)
+                        .foregroundStyle(Color(red: 1, green: 0, blue: 0))
                         .font(.custom("Menlo", size: 12))
                     Spacer()
                     Button("Run & Debug") {
                         if compilerAction() {
-                            // Compile Succeeded
                             let debugProcess: Process = Process()
                             debugProcess.launchPath = output
-                            // Set launch path to compiled executable
-                            let pipe = Pipe()
+                            let pipe: Pipe = Pipe()
                             debugProcess.standardOutput = pipe
                             debugProcess.standardError = pipe
-                            // Get Stdout and Stderr into pipe
                             debugProcess.launch()
                             debugProcess.waitUntilExit()
-                            // Launch and wait for exit
                             let data: Data = pipe.fileHandleForReading.readDataToEndOfFile()
-                            debug = String(data: data, encoding: .utf8) ?? String()
-                            // Read data from pipe and output it to TextView
+                            debug = String(data: data, encoding: .utf8) ?? "(null)"
                         } else {
-                            // Failed compiling
                             debug = "Error: Failed Compiling"
                         }
                         output = String()
                     } .keyboardShortcut("r", modifiers: .command)
-                    // Command + R
+                    // Command + R -> Run and debug the compiled executable
                 }
                 HStack {
                     Text("Debug: ")
@@ -166,6 +151,6 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ContentView().accentColor(Color.black).frame(minWidth: 450, idealWidth: 450, maxWidth: .infinity, minHeight: 450, idealHeight: 450, maxHeight: .infinity)
     }
 }
