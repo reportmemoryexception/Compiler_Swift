@@ -33,7 +33,9 @@ func compile(input: String, output: String, isFramework: Bool, frameworkIdentifi
                 do {
                     try FileManager.default.createDirectory(atPath: outputParent, withIntermediateDirectories: true, attributes: nil)
                 } catch {
-                    showAlert(Title: "Unknown Error", Message: "Error creating directory: \(error.localizedDescription)")
+                    let dirError = error.localizedDescription
+                    result = "Unkown Error: Error creating directory: \"\(dirError)\""
+                    return result
                 }
             }
             let Extension: String = String(URL(fileURLWithPath: input).pathExtension)
@@ -85,6 +87,21 @@ func compile(input: String, output: String, isFramework: Bool, frameworkIdentifi
         result = "Error: No Such File: \"\(input)\""
     }
     return result
+}
+
+func analyzeDebuggerOutput(debuggerOutput: String) -> String {
+    if debuggerOutput == "Error: Failed Compiling" {
+        return "Compiler Failure...Cannot Analyze..."
+    }
+    let filteredPermissionErrorArray: [String] = debuggerOutput.components(separatedBy: "\n").filter { $0.contains("Operation not permitted") }
+    var debugSuggestion: String = "Analyze got nothing..."
+    if filteredPermissionErrorArray.count != 0 {
+        debugSuggestion = "Probable Permission Errors:\n"
+        for i in filteredPermissionErrorArray {
+            debugSuggestion.append("\(i)\n")
+        }
+    }
+    return debugSuggestion
 }
 
 @main
