@@ -7,6 +7,47 @@
 
 import SwiftUI
 
+struct RoundedRectangleButtonStyle: ButtonStyle {
+    @Environment(\.colorScheme) var colorScheme
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.top, 2)
+            .padding(.bottom, 3)
+            .padding(.leading, 7)
+            .padding(.trailing, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(colorScheme == .dark ? Color(red: 0.25, green: 0.25, blue: 0.25) : Color(red: 0.9, green: 0.9, blue: 0.9))
+            )
+            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
+    }
+}
+
+struct debuggerSuggestionView: View {
+    @Environment(\.presentationMode) var presentationMode
+    @Binding var debuggerSuggestion: String
+    var body: some View {
+        ZStack {
+            TextEditor(text: .constant(debuggerSuggestion)).font(.custom("Menlo", size: 12))
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button("close"){
+                        if let window = NSApplication.shared.keyWindow {
+                            presentationMode.wrappedValue.dismiss()
+                            window.close()
+                        }
+                    }
+                    .buttonStyle(RoundedRectangleButtonStyle())
+                }
+            }
+            .padding(.trailing, 8)
+            .padding(.bottom, 8)
+        }
+    }
+}
+
 struct ContentView: View {
     
     @Environment(\.colorScheme) var colorScheme
@@ -17,16 +58,19 @@ struct ContentView: View {
     @State private var output: String = String()
     @State private var framework: String = String()
     @State private var isFrameworkCompile: Bool = false
+    @State public var isDebuggerSuggestionVisible: Bool = false
+    @State public var debuggerSuggestionValue: String = String()
     
     func compilerAction() -> Bool {
         var result: String = String()
         if !input.isEmpty && !output.isEmpty {
             if isFrameworkCompile {
+                framework = String(framework.filter { $0 != Character("\\") })
                 if framework.contains(", ") {
-                    let frameworkArray: Array = framework.split(separator: ", ")
+                    let frameworkArray: [String.SubSequence] = framework.split(separator: ", ")
                     var args: [String] = []
                     for i: String.SubSequence in frameworkArray {
-                        while !i.isEmpty {
+                        if !i.isEmpty {
                             args.append("-framework")
                             args.append(String(i))
                         }
@@ -55,7 +99,25 @@ struct ContentView: View {
                 return true
             }
         }
-        return true
+        return false
+    }
+    
+    func chooseFile(title: String, isDir: Bool) -> String {
+        let dialog = NSOpenPanel();
+        dialog.title = title;
+        dialog.showsResizeIndicator = true;
+        dialog.showsHiddenFiles = true;
+        dialog.allowsMultipleSelection = false;
+        dialog.canChooseDirectories = isDir;
+        if dialog.runModal() ==  NSApplication.ModalResponse.OK {
+            if (dialog.url != nil) {
+                return String(dialog.url!.path)
+            } else {
+                return String()
+            }
+        } else {
+            return String()
+        }
     }
     
     var body: some View {
@@ -64,23 +126,43 @@ struct ContentView: View {
         VStack {
             VStack {
                 HStack {
-                    Text("Source Code: ")
-                    TextField("Input File", text: $input)
-                        .font(.custom("Menlo", size: 12))
-                        .padding(.leading, 5)
-                        .textFieldStyle(PlainTextFieldStyle())
-                        .frame(height: 22)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(backgroundColor).stroke(accent))
+                    Text("Source Code:   ")
+                    ZStack {
+                        TextField("Input File", text: $input)
+                            .font(.custom("Menlo", size: 12))
+                            .padding(.leading, 7)
+                            .textFieldStyle(PlainTextFieldStyle())
+                            .frame(height: 28)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(backgroundColor).stroke(accent))
+                        HStack {
+                            Spacer()
+                            Button("choose...") {
+                                input = chooseFile(title: "Choose Input File...", isDir: false)
+                            }
+                            .buttonStyle(RoundedRectangleButtonStyle())
+                            .padding(.trailing, 4)
+                        }
+                    }
                 }
                 HStack {
-                    Text("Output File: ")
-                    TextField("Compiled Executable", text: $output)
-                        .font(.custom("Menlo", size: 12))
-                        .padding(.leading, 5)
-                        .textFieldStyle(PlainTextFieldStyle())
-                        .frame(height: 22)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(backgroundColor).stroke(accent))
-                        .padding(.leading, 11)
+                    Text("Output File:   ")
+                    ZStack {
+                        TextField("Compiled Executable", text: $output)
+                            .font(.custom("Menlo", size: 12))
+                            .padding(.leading, 7)
+                            .textFieldStyle(PlainTextFieldStyle())
+                            .frame(height: 28)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(backgroundColor).stroke(accent))
+                            .padding(.leading, 11)
+                        HStack {
+                            Spacer()
+                            Button("choose...") {
+                                output = chooseFile(title: "Choose Output Directory...", isDir: true)
+                            }
+                            .buttonStyle(RoundedRectangleButtonStyle())
+                            .padding(.trailing, 4)
+                        }
+                    }
                 }
                 Divider()
                 HStack {
@@ -116,9 +198,9 @@ struct ContentView: View {
                             debugProcess.standardOutput = pipe
                             debugProcess.standardError = pipe
                             debugProcess.launch()
-                            debugProcess.waitUntilExit()
                             let data: Data = pipe.fileHandleForReading.readDataToEndOfFile()
-                            debug = String(data: data, encoding: .utf8) ?? "(null)"
+                            let debuggerOutput: String = String(data: data, encoding: .utf8) ?? "(null)"
+                            debug = debuggerOutput
                         } else {
                             debug = "Error: Failed Compiling"
                         }
@@ -140,8 +222,27 @@ struct ContentView: View {
                 }
             }
                 .padding(.leading, 8).padding(.trailing, 8).padding(.top, 8)
-            TextEditor(text: .constant(debug))
-                .font(.custom("Menlo", size: 12))
+            ZStack {
+                TextEditor(text: .constant(debug)).font(.custom("Menlo", size: 12))
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button("Analyze"){
+                            debuggerSuggestionValue = analyzeDebuggerOutput(debuggerOutput: debug)
+                            isDebuggerSuggestionVisible = true
+                        }
+                        .buttonStyle(RoundedRectangleButtonStyle())
+                    }
+                }
+                .padding(.trailing, 8)
+                .padding(.bottom, 8)
+            }
+            .sheet(isPresented: $isDebuggerSuggestionVisible, onDismiss: {
+                isDebuggerSuggestionVisible = false
+            }, content: {
+                debuggerSuggestionView(debuggerSuggestion: $debuggerSuggestionValue).accentColor(Color.black).frame(minWidth: 500, idealWidth: 500, minHeight: 300, idealHeight: 300)
+            })
         }
         
     }
@@ -152,5 +253,12 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView().accentColor(Color.black).frame(minWidth: 450, idealWidth: 450, maxWidth: .infinity, minHeight: 450, idealHeight: 450, maxHeight: .infinity)
+    }
+}
+
+struct debuggerSuggestionView_Previews: PreviewProvider {
+    static var previews: some View {
+        @State var debuggerSuggestion = "Analyze got nothing..."
+        debuggerSuggestionView(debuggerSuggestion: $debuggerSuggestion).accentColor(Color.black).frame(minWidth: 500, idealWidth: 500, minHeight: 300, idealHeight: 300)
     }
 }
