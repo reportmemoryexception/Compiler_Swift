@@ -61,7 +61,7 @@ struct ContentView:View {
     @State public var debuggerSuggestionValue:String = String()
     
     func compilerAction() -> Bool {
-        var result:String = String()
+        var result:String = ""
         if !input.isEmpty && !output.isEmpty {
             if isFrameworkCompile {
                 framework = String(framework.filter{$0 != Character("\\")})
@@ -87,9 +87,9 @@ struct ContentView:View {
             } else {
                 result = compile(input,output,false,nil,false,[])
             }
-            input = String()
+            input = ""
             isFrameworkCompile = false
-            framework = String()
+            framework = ""
             if checkError(result) {
                 alert = result
                 showAlert("Compiler Threw Error",result)
