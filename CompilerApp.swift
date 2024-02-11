@@ -24,7 +24,7 @@ func checkError(_ string:String) -> Bool {
 }
 
 func compile(_ input:String,_ output:String,_ isFramework:Bool,_ frameworkIdentifier:String?,_ isExternalArguments:Bool,_ externalArguments:[String]) -> String {
-    var result:String = String()
+    var result:String = ""
     let fs = FileManager.default
     if fs.fileExists(atPath:input) {
         if !fs.fileExists(atPath:output) {
@@ -34,7 +34,7 @@ func compile(_ input:String,_ output:String,_ isFramework:Bool,_ frameworkIdenti
                     try FileManager.default.createDirectory(atPath:outputParent,withIntermediateDirectories:true,attributes:nil)
                 } catch {
                     let dirError = error.localizedDescription
-                    result = "Unkown Error: Error creating directory: \"\(dirError)\""
+                    result = "Unknown Error: Error creating directory: \"\(dirError)\""
                     return result
                 }
             }
@@ -117,10 +117,10 @@ func chooseFile(_ title:String,_ isDir:Bool) -> String {
         if dialog.url != nil {
             return String(dialog.url!.path)
         } else {
-            return String()
+            return ""
         }
     } else {
-        return String()
+        return ""
     }
 }
 
